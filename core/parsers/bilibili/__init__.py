@@ -413,20 +413,28 @@ class BilibiliParser(BaseParser):
         # 获取下载数据
         download_url_data = await video.get_download_url(page_index=page_index)
         detecter = VideoDownloadURLDataDetecter(download_url_data)
-        streams = detecter.detect_best_streams(
+        streams = detecter.detect(
             video_max_quality=self.video_quality,
             codecs=[self.video_codecs],
             no_dolby_video=True,
             no_hdr=True,
         )
-        video_stream = streams[0]
-        if not isinstance(video_stream, VideoStreamDownloadURL):
+        video_streams = [
+            s
+            for s in streams
+            if isinstance(s, VideoStreamDownloadURL) and s.video_codecs is not None
+        ]
+        audio_streams = [s for s in streams if isinstance(s, AudioStreamDownloadURL)]
+
+        if not video_streams:
             raise DownloadException("未找到可下载的视频流")
+        video_streams.sort(key=lambda s: s.video_quality.value, reverse=True)
+        video_stream = video_streams[0]
         logger.debug(
             f"视频流质量: {video_stream.video_quality.name}, 编码: {video_stream.video_codecs}"
         )
 
-        audio_stream = streams[1]
+        audio_stream = audio_streams[0] if audio_streams else None
         if not isinstance(audio_stream, AudioStreamDownloadURL):
             return video_stream.url, None
         logger.debug(f"音频流质量: {audio_stream.audio_quality.name}")
