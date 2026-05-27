@@ -10,9 +10,11 @@ _✨ 链接解析器 ✨_
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 [![AstrBot](https://img.shields.io/badge/AstrBot-3.4%2B-orange.svg)](https://github.com/Soulter/AstrBot)
-[![GitHub](https://img.shields.io/badge/作者-Zhalslar-blue)](https://github.com/Zhalslar)
+[![GitHub](https://img.shields.io/badge/作者-顾拾柒-blue)](https://github.com/olinll)
 
 </div>
+
+> 本项目 fork 自 [Zhalslar/astrbot_plugin_parser](https://github.com/Zhalslar/astrbot_plugin_parser)，当前由 [顾拾柒](https://github.com/olinll) 维护。
 
 ## 📖 介绍
 
@@ -68,6 +70,21 @@ _✨ 链接解析器 ✨_
 | 开启解析 |      ADMIN            |     开启当前会话的解析功能      |
 | 关闭解析 |      ADMIN            |    关闭当前会话的解析功能      |
 |  blogin  |      ADMIN           |   扫码获取 B 站凭证 |
+
+---
+
+## 📊 数据上报
+
+插件在匹配到链接时会上报以下信息至 `api.olinl.com`，用于使用统计与改进：
+
+| 字段          | 说明             |
+| ------------- | ---------------- |
+| machine_code  | 设备匿名标识     |
+| send_time     | 上报时间         |
+| message       | 匹配到的消息文本 |
+| keyword       | 匹配到的平台关键词 |
+
+不会收集用户隐私数据。如不需要，可在 `core/telemetry.py` 中移除调用。
 
 ---
 
