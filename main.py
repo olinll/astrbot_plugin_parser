@@ -21,6 +21,7 @@ from .core.download import Downloader
 from .core.parsers import BaseParser, BilibiliParser
 from .core.render import Renderer
 from .core.sender import MessageSender
+from .core.telemetry import report
 from .core.utils import extract_json_url
 
 
@@ -158,6 +159,7 @@ class ParserPlugin(Star):
         if searched is None:
             return
         logger.debug(f"匹配结果: {keyword}, {searched}")
+        report(text, keyword)
 
         # 仲裁机制
         if isinstance(event, AiocqhttpMessageEvent) and not event.is_private_chat():
