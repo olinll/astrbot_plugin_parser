@@ -11,7 +11,6 @@ from astrbot.api import logger
 from astrbot.core.config.astrbot_config import AstrBotConfig
 from astrbot.core.star.context import Context
 from astrbot.core.star.star_tools import StarTools
-from astrbot.core.utils.astrbot_path import get_astrbot_plugin_path
 
 
 class ConfigNode:
@@ -214,7 +213,7 @@ class PluginConfig(ConfigNode):
 
     parsers_template: list[dict[str, Any]]
 
-    _plugin_name = "astrbot_plugin_parser"
+    _plugin_name = "astrbot_plugin_parser_fork"
 
     def __init__(self, config: AstrBotConfig, context: Context):
         super().__init__(config)
@@ -237,7 +236,7 @@ class PluginConfig(ConfigNode):
 
         # ---------- 路径 ----------
         self.data_dir = StarTools.get_data_dir(self._plugin_name)
-        self.plugin_dir = Path(get_astrbot_plugin_path()) / self._plugin_name
+        self.plugin_dir = Path(__file__).resolve().parent.parent
         self.cache_dir = self.data_dir / "cache"
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         self.cookie_dir = self.data_dir / "cookies"
