@@ -69,6 +69,7 @@ class Downloader:
         self.cfg = config
         self.max_size = self.cfg.source_max_size
         self.default_headers: dict[str, str] = COMMON_HEADER.copy()
+        self._sem = asyncio.Semaphore(self.cfg.max_concurrent_downloads)
         # 视频信息缓存
         self.info_cache: LimitedSizeDict[str, VideoInfo] = LimitedSizeDict()
         # 用于流式下载的客户端
@@ -96,59 +97,60 @@ class Downloader:
         # 如果文件存在，则直接返回
         if file_path.exists():
             return file_path
-        headers = headers or self.default_headers
-        retries = self.cfg.download_retry_times
-        for attempt in range(retries + 1):
-            try:
-                async with self.client.get(
-                    url, headers=headers, allow_redirects=True, proxy=proxy
-                ) as response:
-                    if response.status >= 400:
-                        raise ClientError(f"HTTP {response.status} {response.reason}")
-                    content_length = response.content_length
-                    max_bytes = self.max_size * 1024 * 1024
+        async with self._sem:
+            headers = headers or self.default_headers
+            retries = self.cfg.download_retry_times
+            for attempt in range(retries + 1):
+                try:
+                    async with self.client.get(
+                        url, headers=headers, allow_redirects=True, proxy=proxy
+                    ) as response:
+                        if response.status >= 400:
+                            raise ClientError(f"HTTP {response.status} {response.reason}")
+                        content_length = response.content_length
+                        max_bytes = self.max_size * 1024 * 1024
 
-                    if content_length == 0:
-                        logger.warning(f"媒体 url: {url}, 大小为 0, 取消下载")
-                        raise ZeroSizeException
-                    if content_length and content_length > max_bytes:
-                        logger.warning(
-                            f"媒体 url: {url} 大小 {content_length / 1024 / 1024:.2f} MB 超过 {self.max_size} MB, 取消下载"
-                        )
-                        raise SizeLimitException
+                        if content_length == 0:
+                            logger.warning(f"媒体 url: {url}, 大小为 0, 取消下载")
+                            raise ZeroSizeException
+                        if content_length and content_length > max_bytes:
+                            logger.warning(
+                                f"媒体 url: {url} 大小 {content_length / 1024 / 1024:.2f} MB 超过 {self.max_size} MB, 取消下载"
+                            )
+                            raise SizeLimitException
 
-                    downloaded = 0
-                    with self.get_progress_bar(file_name, content_length) as bar:
-                        async with aiofiles.open(file_path, "wb") as file:
-                            async for chunk in response.content.iter_chunked(
-                                1024 * 1024
-                            ):
-                                downloaded += len(chunk)
-                                if downloaded > max_bytes:
-                                    raise SizeLimitException
-                                await file.write(chunk)
-                                bar.update(len(chunk))
+                        downloaded = 0
+                        with self.get_progress_bar(file_name, content_length) as bar:
+                            async with aiofiles.open(file_path, "wb") as file:
+                                async for chunk in response.content.iter_chunked(
+                                    1024 * 1024
+                                ):
+                                    downloaded += len(chunk)
+                                    if downloaded > max_bytes:
+                                        raise SizeLimitException
+                                    await file.write(chunk)
+                                    bar.update(len(chunk))
 
-                    if downloaded == 0:
-                        logger.warning(f"媒体 url: {url}, 实际大小为 0, 取消下载")
-                        raise ZeroSizeException
-                    if content_length and downloaded < content_length:
-                        raise ClientError(
-                            f"HTTP payload incomplete {downloaded}/{content_length}"
-                        )
+                        if downloaded == 0:
+                            logger.warning(f"媒体 url: {url}, 实际大小为 0, 取消下载")
+                            raise ZeroSizeException
+                        if content_length and downloaded < content_length:
+                            raise ClientError(
+                                f"HTTP payload incomplete {downloaded}/{content_length}"
+                            )
 
-                return file_path
-            except (ZeroSizeException, SizeLimitException):
-                await safe_unlink(file_path)
-                raise
-            except (ClientError, TimeoutError) as exc:
-                await safe_unlink(file_path)
-                if attempt < retries:
-                    await sleep(1 + attempt)
-                    continue
-                logger.exception(f"下载失败 | url: {url}, file_path: {file_path}")
-                raise DownloadException("媒体下载失败") from exc
-        raise DownloadException("媒体下载失败")
+                    return file_path
+                except (ZeroSizeException, SizeLimitException):
+                    await safe_unlink(file_path)
+                    raise
+                except (ClientError, TimeoutError) as exc:
+                    await safe_unlink(file_path)
+                    if attempt < retries:
+                        await sleep(1 + attempt)
+                        continue
+                    logger.exception(f"下载失败 | url: {url}, file_path: {file_path}")
+                    raise DownloadException("媒体下载失败") from exc
+            raise DownloadException("媒体下载失败")
 
     @staticmethod
     def get_progress_bar(desc: str, total: int | None = None) -> tqdm:

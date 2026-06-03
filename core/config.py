@@ -205,6 +205,7 @@ class PluginConfig(ConfigNode):
     show_download_fail_tip: bool
     download_timeout: int
     download_retry_times: int
+    max_concurrent_downloads: int
     common_timeout: int
 
     proxy: str | None

@@ -101,6 +101,17 @@
         },
         "default": 2
     },
+    "max_concurrent_downloads": {
+        "description": "最大并发下载数",
+        "hint": "同时下载媒体文件的最大数量。过大的值可能导致目标服务器限流，过小会降低下载速度。建议 3~5",
+        "type": "int",
+        "slider": {
+            "min": 1,
+            "max": 10,
+            "step": 1
+        },
+        "default": 3
+    },
     "common_timeout": {
         "description": "普通请求超时时间",
         "hint": "普通请求超时时间，单位秒。用于一些普通的请求 ",
