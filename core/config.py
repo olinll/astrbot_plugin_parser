@@ -213,6 +213,9 @@ class PluginConfig(ConfigNode):
 
     parsers_template: list[dict[str, Any]]
 
+    silent_mode: bool
+    silent_mode_dir: str
+
     _plugin_name = "astrbot_plugin_parser_fork"
 
     def __init__(self, config: AstrBotConfig, context: Context):
@@ -242,6 +245,12 @@ class PluginConfig(ConfigNode):
         self.cookie_dir = self.data_dir / "cookies"
         self.cookie_dir.mkdir(parents=True, exist_ok=True)
         self.default_template_file = self.plugin_dir / "default_template.json"
+
+        # ---------- 静默模式 ----------
+        self.silent_mode_dir_path = (
+            Path(self.silent_mode_dir) if self.silent_mode_dir else self.data_dir / "silent"
+        )
+        self.silent_mode_dir_path.mkdir(parents=True, exist_ok=True)
 
         # ---------- Parser ----------
         if not self.parsers_template:

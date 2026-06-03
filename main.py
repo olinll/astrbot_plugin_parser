@@ -21,6 +21,7 @@ from .core.download import Downloader
 from .core.parsers import BaseParser, BilibiliParser
 from .core.render import Renderer
 from .core.sender import MessageSender
+from .core.silent import append_log, build_notification, store_media
 from .core.telemetry import report
 from .core.utils import extract_json_url
 
@@ -195,8 +196,25 @@ class ParserPlugin(Star):
             logger.warning(f"[资源防抖] 资源 {resource_id} 在防抖时间内，跳过发送")
             return
 
+        # 静默模式
+        if self.cfg.silent_mode:
+            await self._handle_silent_mode(event, parse_res)
+            return
+
         # 发送
         await self.sender.send_parse_result(event, parse_res)
+
+    async def _handle_silent_mode(self, event: AstrMessageEvent, parse_res):
+        """静默模式：存储媒体文件到本地，发送确认通知"""
+        silent_dir = self.cfg.silent_mode_dir_path
+        try:
+            record = await store_media(silent_dir, parse_res)
+            await append_log(silent_dir, record)
+            notification = build_notification(record, silent_dir)
+            await event.send(event.plain_result(notification))
+        except Exception as e:
+            logger.error(f"[静默模式] 存储失败: {e}")
+            await event.send(event.plain_result(f"静默模式存储失败: {e}"))
 
     @filter.permission_type(filter.PermissionType.ADMIN)
     @filter.command("开启解析")

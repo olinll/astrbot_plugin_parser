@@ -124,6 +124,18 @@
         "type": "string",
         "default": "30 2 * * *"
     },
+    "silent_mode": {
+        "description": "静默模式",
+        "hint": "开启后，解析到的媒体文件将存储到本地目录，不会发送到聊天。存储成功后会发送一条确认消息",
+        "type": "bool",
+        "default": false
+    },
+    "silent_mode_dir": {
+        "description": "静默模式存储目录",
+        "hint": "媒体文件的存储路径。留空则使用插件默认数据目录下的 silent 文件夹。注意：Docker 部署时需将此目录挂载为持久化卷，否则容器重启后数据会丢失",
+        "type": "string",
+        "default": ""
+    },
     "parsers_template": {
         "description": "解析器",
         "type": "template_list",
