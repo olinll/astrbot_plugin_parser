@@ -1,4 +1,4 @@
-from asyncio import Task, TimeoutError, create_task, gather, sleep, to_thread
+from asyncio import Semaphore, Task, TimeoutError, create_task, gather, sleep, to_thread
 from collections.abc import Callable, Coroutine
 from functools import wraps
 from pathlib import Path
@@ -69,7 +69,7 @@ class Downloader:
         self.cfg = config
         self.max_size = self.cfg.source_max_size
         self.default_headers: dict[str, str] = COMMON_HEADER.copy()
-        self._sem = asyncio.Semaphore(self.cfg.max_concurrent_downloads)
+        self._sem = Semaphore(self.cfg.max_concurrent_downloads)
         # 视频信息缓存
         self.info_cache: LimitedSizeDict[str, VideoInfo] = LimitedSizeDict()
         # 用于流式下载的客户端
