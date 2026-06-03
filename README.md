@@ -1,9 +1,7 @@
 
 <div align="center">
 
-![:name](https://count.getloli.com/@astrbot_plugin_parser?name=astrbot_plugin_parser&theme=minecraft&padding=6&offset=0&align=top&scale=1&pixelated=1&darkmode=auto)
-
-# astrbot_plugin_parser
+# astrbot_plugin_media_parser
 
 _✨ 链接解析器 ✨_  
 
@@ -57,7 +55,6 @@ _✨ 链接解析器 ✨_
 
 ## 💿 安装
 
-直接在astrbot的插件市场搜索astrbot_plugin_parser，点击安装，等待完成即可
 
 ## ⚙️ 配置
 

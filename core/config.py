@@ -217,7 +217,7 @@ class PluginConfig(ConfigNode):
     silent_mode: bool
     silent_mode_dir: str
 
-    _plugin_name = "astrbot_plugin_parser_fork"
+    _plugin_name = "astrbot_plugin_media_parser"
 
     def __init__(self, config: AstrBotConfig, context: Context):
         super().__init__(config)
